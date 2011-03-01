@@ -1,0 +1,217 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+#
+# warsimin - gui warsi
+#
+
+import pygtk
+pygtk.require('2.0')
+from gi.repository import Gtk, GLib, GObject, GdkPixbuf, Gio, Pango
+import os
+import gettext
+from libwarsi import OnPackage
+from optparse import OptionParser
+
+gettext.textdomain('libwarsi')
+_ = gettext.gettext
+
+class Warsimin(GObject.GObject):
+    __gtype_name__ = 'Warsimin'
+
+    def __init__(self, title = None, module = None, filename = None, children = None):
+        super(Warsimin, self).__init__()
+        self.title = title
+        self.module = module
+        self.filename = filename
+        if children is None:
+            children = []
+
+        self.children = children
+
+        self.isdir = False
+        if module is None:
+            self.isdir = True
+
+class GtkWarsiminApp(object):
+    def quit(self, *args):
+        Gtk.main_quit()
+
+    def ErrorMessage(self, message):
+        dialog = Gtk.MessageDialog(self, Gtk.DIALOG_DESTROY_WITH_PARENT,
+            Gtk.MESSAGE_ERROR, Gtk.BUTTONS_CLOSE,
+            '%s' %message)
+        
+        dialog.connect ("response", lambda d, r: d.destroy())
+        dialog.show()
+
+    def __init__(self, pkg):
+        super(GtkWarsiminApp, self).__init__()
+
+        info = self.package_info(pkg)
+
+        window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
+        window.set_title(_('Warung Aplikasi'))
+
+        window.connect_after('destroy', self._quit)
+
+        vbox = Gtk.VBox(spacing = 0)
+        window.add(vbox)
+
+        frame = Gtk.Frame()
+        frame.set_label(_("Pemasangan Perangkat Lunak Aplikasi"))
+        vbox.pack_start(frame, True, True, 10)
+
+        vbox2 = Gtk.VBox(spacing = 0)
+        hbox = Gtk.HBox(spacing = 0)
+
+        label = Gtk.Label()
+        label.set_label(_("Software"))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+
+        label = Gtk.Label()
+        label.set_label(_(":"))
+        label.set_justify(Gtk.Justification.RIGHT)
+        hbox.add(label)
+
+        label = Gtk.Label()
+        label.set_label(_("%s" %info['Name']))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+        vbox2.pack_start(hbox, True, True, 10)
+
+        hbox = Gtk.HBox(spacing = 0)
+        label = Gtk.Label()
+        label.set_label(_("Software Version"))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+	
+        label = Gtk.Label()
+        label.set_label(_(":"))
+        label.set_justify(Gtk.Justification.RIGHT)
+        hbox.add(label)
+
+        label = Gtk.Label()
+        label.set_label(_("%s" %info['Version']))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+        vbox2.pack_start(hbox, True, True, 10)
+
+        hbox = Gtk.HBox(spacing = 0)
+        label = Gtk.Label()
+        label.set_label(_("Architecture"))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+	
+        label = Gtk.Label()
+        label.set_label(_(":"))
+        label.set_justify(Gtk.Justification.RIGHT)
+        hbox.add(label)
+
+        label = Gtk.Label()
+        label.set_label(_("%s" %info['Arch']))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+        vbox2.pack_start(hbox, True, True, 10)
+
+        hbox = Gtk.HBox(spacing = 0)
+        label = Gtk.Label()
+        label.set_label(_("Information"))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+	
+        label = Gtk.Label()
+        label.set_label(_(":"))
+        label.set_justify(Gtk.Justification.RIGHT)
+        hbox.add(label)
+
+        label = Gtk.Label()
+        label.set_label(_("%s" %info['Desc']))
+        label.set_justify(Gtk.Justification.LEFT)
+        hbox.add(label)
+        vbox2.pack_start(hbox, True, True, 10)
+        frame.add(vbox2)
+
+        bbox = Gtk.HButtonBox()
+        bbox.set_border_width(5)
+        bbox.set_layout(Gtk.ButtonBoxStyle.END)
+        bbox.set_spacing(10)
+
+        button = Gtk.Button()
+        button.set_use_stock('gtk-cancel')
+        button.set_label("Quit")
+        button.connect('destroy', self._quit)
+        bbox.add(button)
+
+        button = Gtk.Button()
+        button.set_use_stock('gtk-ok')
+        button.set_label("Install")
+        bbox.add(button)
+
+        vbox.pack_end(bbox, True, True, 0)
+
+        window.set_default_size (600, 400)
+        window.show_all()
+
+        Gtk.main()
+
+    def package_info(self, pkg):
+        on = OnPackage()
+        if not os.path.isfile(pkg):
+            self.ErrorMessage(Gtk.ErrorMessage, _('No such file or directory.'))
+            exit(1)
+
+        if os.path.isfile(pkg):
+            if not OnPackage.is_valid(on, pkg):
+                self.ErrorMessage(Gtk.ErrorMessage, _('Not valid as BlankOn Package'))
+                exit(1)
+
+        info = OnPackage.show_info(on, pkg)
+
+        return info
+
+    def commit_install(self, pkg):
+#        on = OnPackage()
+#        #TODO: tambah progressbar saat extract
+#        extract = on.extract(pkg)
+#        versions = on.check_version_all(pkg, extract)
+#		
+#        for version_key in versions.keys():
+#            if versions[version_key] == "Older":
+#                print _('Version %s is %s with system database package, get new package from warung.') %version_key %versions[version_key]
+#                exit(1)
+
+#        on.mark_install(pkg, extract)
+#        on.commit_install_gui()
+#        
+#        self.success_dialog(pkg)
+        print pkg
+
+    def success_dialog(self, pkg):
+        message = _("Successfully, the package %s is installed on your system.")
+
+        dialog = Gtk.MessageDialog(self, Gtk.DIALOG_DESTROY_WITH_PARENT,
+            Gtk.MESSAGE_INFO, Gtk.BUTTONS_CLOSE,
+            '%s' %message)
+        
+        dialog.connect ("response", lambda d, r: d.destroy())
+        dialog.show()
+
+def main():
+    parser = OptionParser()
+    opts, args = parser.parse_args()
+
+    if not args:
+        print _("Warsimin Error")
+        exit(1)
+	
+    if len(args)>1:
+        print _("Warsimin Error")
+        exit(1)
+
+    pkg = args[0]
+    
+    warsimin = GtkWarsiminApp(pkg)
+
+if __name__ == '__main__':
+    main()
